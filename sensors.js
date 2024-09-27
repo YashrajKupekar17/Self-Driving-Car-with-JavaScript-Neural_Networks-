@@ -1,8 +1,8 @@
 class Sensor{
     constructor(car){
         this.car = car;
-        this.rayCount = 3;
-        this.raySpread = Math.PI/4;
+        this.rayCount = 5;
+        this.raySpread = Math.PI/2;
         this.rayLength = 100;
         
         this.rays = [];
@@ -10,16 +10,16 @@ class Sensor{
     }
     update(roadBorders){
         this.#castRays();
-        // this.readings = [];
-        // for(let i=0;i<this.rayCount;i++){
-        //     this.readings.push(this.#getReading(this.rays[i],roadBorders));
-
-        // }
+        this.readings =[];
+        for(let i=0;i<this.rayCount;i++){
+            this.readings.push(this.#getReading(this.rays[i],roadBorders));
     }
+}
+    
     #getReading(ray,roadBorders){
         let touches = [];
         for(let i=0;i<roadBorders.length;i++){
-            const touch = this.getIntersection(ray[0],ray[1],roadBorders[i][0],roadBorders[i][1]);
+            const touch = getIntersection(ray[0],ray[1],roadBorders[i][0],roadBorders[i][1]);
             if(touch){
                 touches.push(touch);
             }
@@ -42,16 +42,28 @@ class Sensor{
                 y: this.car.y- Math.cos(rayAngle)*this.rayLength
             }
             this.rays.push([start,end]);
-        }}
+        }
+    }
     draw(ctx){
     for(let i = 0; i < this.rayCount; i++){
         // Check if the ray is defined before drawing
         if(this.rays[i]){
+            let end = this.rays[i][1];
+            if(this.readings[i]){
+                end = this.readings[i];
+            }
             ctx.beginPath();
-            ctx.strokeStyle = "red";
+            ctx.strokeStyle = "yellow";
             ctx.lineWidth = 2;
             ctx.moveTo(this.rays[i][0].x, this.rays[i][0].y);
-            ctx.lineTo(this.rays[i][1].x, this.rays[i][1].y);
+            ctx.lineTo(end.x, end.y);
+            ctx.stroke(); // Draw the ray
+
+            ctx.beginPath();
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 2;
+            ctx.moveTo(this.rays[i][1].x, this.rays[i][1].y);
+            ctx.lineTo(end.x, end.y);
             ctx.stroke(); // Draw the ray
         }
     }

@@ -9,13 +9,26 @@ class Car{
         this.maxSpeed = 5;
         this.friction = 0.05;
         this.angle = 0;
+        this.damaged = false;
         this.sensor = new Sensor(this);
         this.controls = new Controls();
     }
 
     update(RoadBorders) {
-        this.#move();
+        if(!this.damaged){
+            this.#move();
+            this.polygon = this.#createPolygon();
+            this.damaged = this.#assessDamage(RoadBorders);
+        }
         this.sensor.update(RoadBorders);
+    }
+    #assessDamage(RoadBorders){
+        for(let i=0;i<RoadBorders.length;i++){
+            if(polyIntersect(this.polygon,RoadBorders[i])){
+                return true;
+            }
+        }
+        return false;
     }
     #move(){
 
@@ -68,29 +81,43 @@ class Car{
         this.x -= Math.sin(this.angle)*this.speed;
         this.y -= Math.cos(this.angle)*this.speed;
     }
+    #createPolygon(){
+        const points  = [];
+        const rad = Math.hypot(this.width,this.height)/2;
+        const alpha = Math.atan2(this.width,this.height);
+        points.push({
+            x:this.x-Math.sin(this.angle-alpha)*rad,
+            y:this.y-Math.cos(this.angle-alpha)*rad
+        });
+        points.push({
+            x:this.x-Math.sin(this.angle+alpha)*rad,
+            y:this.y-Math.cos(this.angle+alpha)*rad
+        });
+        points.push({
+            x:this.x-Math.sin(Math.PI +this.angle-alpha)*rad,
+            y:this.y-Math.cos(Math.PI +this.angle-alpha)*rad
+        });
+        points.push({
+            x:this.x-Math.sin(Math.PI + this.angle+alpha)*rad,
+            y:this.y-Math.cos(Math.PI + this.angle+alpha)*rad
+        });
+        console.log("Polygon points:", points);  // Debugging line
+        return points;
+    }
 
     draw(ctx) {
-        // Save the current canvas state
-        ctx.save();
-
-        // Translate the canvas origin to the car's position
-        ctx.translate(this.x,this.y);
-
-        // Rotate the canvas by the negative angle of the car
-        ctx.rotate(-this.angle);
-
-        // Start drawing the car
+        if(this.damaged){
+            ctx.fillStyle = "red";
+        }
+        else{
+            ctx.fillStyle = "blue";
+        }
         ctx.beginPath();
-        ctx.rect(
-            -this.width/2,  // Fix to center the car correctly
-            -this.height/2, // Fix to center the car correctly
-            this.width,
-            this.height
-        );
+        ctx.moveTo(this.polygon[0].x, this.polygon[0].y);
+        for (let i = 1; i < this.polygon.length; i++) {
+            ctx.lineTo(this.polygon[i].x, this.polygon[i].y);
+        }
         ctx.fill();
-
-        // Restore the canvas state
-        ctx.restore();
         this.sensor.draw(ctx);
     }
 }
