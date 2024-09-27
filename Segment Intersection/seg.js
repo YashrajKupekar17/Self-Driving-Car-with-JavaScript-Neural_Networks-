@@ -6,22 +6,23 @@ const C={x:100, y: 300};
 const D={x: 800, y: 300};
 
 const ctx = myCanvas.getContext('2d');
-let t =0;
-// const mouse = {
-//     x :0,
-//     y:0
-// }
-// document.onmousemove =(event)=>{{
-//     mouse.x = event.x;
-//     mouse.y = event.y;
-// }}
+let angle= 0;
+const mouse = {
+    x :0,
+    y:0
+}
+document.onmousemove =(event)=>{
+    mouse.x = event.x;
+    mouse.y = event.y;
+}
 animate();
 function animate(){
-    // const radius = 110;
-    // A.x = mouse.x;
-    // A.y = mouse.y-radius;
-    // B.x = mouse.x;
-    // B.y = mouse.y+radius;
+    const radius = 110;
+    A.x = mouse.x + Math.cos(angle)*radius;
+    A.y = mouse.y-Math.sin(angle)*radius;
+    B.x = mouse.x-Math.cos(angle)*radius;
+    B.y = mouse.y+Math.sin(angle)*radius;
+    angle+=0.05;
     ctx.clearRect(0,0,myCanvas.width,myCanvas.height);
     ctx.beginPath();
     ctx.moveTo(A.x,A.y);
@@ -35,21 +36,14 @@ function animate(){
     drawPoint("B",B);
     drawPoint("C",C);
     drawPoint("D",D);
-    const M = {
-        x:lerp(A.x,B.x,t),
-        y:lerp(A.y,B.y,t)
-    }
-    const N = {
-        x:lerp(C.x,D.x,t),
-        y:lerp(C.y,D.y,t)
-    }
     const I = getInterSection(A,B,C,D);
+    if(I){
     drawPoint("I",I);
+    }
      
-    drawPoint("N",N,t<0 || t>1);
-    drawPoint("M",M,t<0 || t>1);
+    // drawPoint("N",N,t<0 || t>1);
+    // drawPoint("M",M,t<0 || t>1);
     
-    t+=0.005;
     requestAnimationFrame(animate);
 }
 /*
@@ -83,13 +77,22 @@ function animate(){
 */
 function getInterSection(A,B,C,D){
 
-    const top = (A.x-C.x)*(D.y-C.y) - (D.x-C.x)*(A.y-C.y);
+    const tTop = (A.x-C.x)*(D.y-C.y) - (D.x-C.x)*(A.y-C.y);
+    const uTop = (A.x-C.x)*(B.y-A.y) - (A.y-C.y)*(B.x-A.x);
     const bottom = (D.x-C.x)*(B.y-A.y) - (D.y-C.y)*(B.x-A.x);
-    const t = top/bottom;
-    return {
-        x: lerp(A.x,B.x,t),
-        y: lerp(A.y,B.y,t)
+    if(bottom !=0){
+        const t = tTop/bottom;
+        const u = uTop/bottom;
+        if(t>=0 && t<=1 && u>=0 && u<=1){
+            return {
+                x: lerp(A.x,B.x,t),
+                y: lerp(A.y,B.y,t),
+                offset:t 
+            }
+        }
+       
     }
+    return null;
 }
 function lerp(x1,x2,t){
     return x1 + (x2-x1)*t;
